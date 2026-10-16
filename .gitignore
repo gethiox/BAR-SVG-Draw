@@ -1,0 +1,15 @@
+# Build output (build.bat / build.sh write to builds/, the release workflow to dist/ and stage/)
+/builds/
+/dist/
+/stage/
+
+# Binaries from a plain "go build" in the repository root:
+# Windows names them *.exe, Linux/macOS have no extension
+/bardraw
+/bardraw.exe
+/svgplan
+/svgplan.exe
+
+# Per-user files the app creates next to its exe when run from the root
+/bardraw.json
+/bardraw.state.json

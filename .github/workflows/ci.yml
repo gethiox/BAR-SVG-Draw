@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call: # the release workflow runs the same checks first
+
+permissions:
+  contents: read
+
+env:
+  # Exact Go version: release binaries are reproducible only with the same
+  # toolchain, so CI, releases and docs/VERIFY.md all use this one.
+  GO_VERSION: "1.24.7"
+  CGO_ENABLED: "0" # raylib-go's cgo-free mode; no C compiler needed anywhere
+  GOTOOLCHAIN: local
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false # no cache: nothing from earlier runs can leak into a build
+
+      - name: Verify module checksums
+        run: go mod verify
+
+      - name: Check formatting
+        if: runner.os == 'Linux'
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::These files need gofmt:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: Vet
+        run: go vet -composites=false ./...
+
+      - name: Test
+        run: go test -count=1 ./...
+
+  cross-build:
+    name: Build all release targets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Vet Windows code from Linux (arm64)
+        run: GOOS=windows GOARCH=arm64 go vet -composites=false ./...
+      - name: Build
+        run: |
+          set -eu
+          for t in windows/amd64 windows/arm64 linux/amd64 linux/arm64; do
+            os="${t%/*}"; arch="${t#*/}"
+            echo "== $t"
+            GOOS=$os GOARCH=$arch go build -trimpath -o /dev/null ./cmd/svgplan
+            if [ "$os" = windows ]; then
+              GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-s -w -H=windowsgui" -o /dev/null .
+            fi
+          done

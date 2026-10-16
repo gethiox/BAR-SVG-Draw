@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -180,7 +179,9 @@ func (a *App) reloadConfig() []winput.Hotkey {
 		svgPath = filepath.Join(a.baseDir, svgPath)
 	}
 	if !strings.EqualFold(filepath.Ext(svgPath), ".svg") {
-		_ = os.MkdirAll(svgPath, 0o755)
+		if err := ensureDrawingsDir(svgPath); err != nil {
+			a.cfgErr = "drawings folder: " + err.Error()
+		}
 	}
 	a.svgPath = svgPath
 	a.lib.Refresh(svgPath, a.st.File)

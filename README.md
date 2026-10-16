@@ -18,19 +18,27 @@ drawing. While paused the game is fully usable; Space continues, Esc discards. A
 amber when idle, cyan while you choose a box, red while it draws — and its menu
 opens the drawings folder or the settings, toggles dry run and quits.
 
+## Download
+
+Prebuilt binaries are on the [Releases](../../releases) page: `bardraw-…-windows-amd64.zip` for the overlay, `svgplan-…-linux-*.tar.gz` for the command-line planner. Every file is built by GitHub Actions from this repository, carries a signed provenance attestation and sits in an immutable release. [docs/VERIFY.md](docs/VERIFY.md) shows how to check that in one command (`gh attestation verify <file> --repo OWNER/REPO`), or by rebuilding byte-for-byte.
+
 ## Build (Windows)
 
 Needs Go 1.22+. No C compiler: in cgo-free mode raylib-go embeds `raylib.dll`.
+Run `build.bat` (Windows) or `./build.sh` (Linux/macOS, cross-compiles the
+exe). Both write to `builds\` (git-ignored): `bardraw.exe` and `svgplan`. The
+first start creates `bardraw.json` (settings, each one documented in its
+`_help` section) and a `drawings` folder next to the exe containing an
+example, `Fluttershy.svg` (embedded in the binary from `drawings/` in this
+repository). Put your own `.svg` files there. The example is only written
+when the folder is created, so deleting it is permanent. Building by hand:
 
 ```bat
 set CGO_ENABLED=0
-go build -trimpath -ldflags "-s -w -H=windowsgui" -o bardraw.exe .
+go build -trimpath -ldflags "-s -w -H=windowsgui" -o builds\bardraw.exe .
 ```
 
-(or just run `build.bat`). Drop `-H=windowsgui` to keep a console window for
-log output. The first start creates `bardraw.json` (settings, each one
-documented in its `_help` section) and uses the `drawings` folder next to the
-exe — put your `.svg` files there.
+Drop `-H=windowsgui` to keep a console window for log output.
 
 Run BAR in **borderless / windowed** mode; nothing can be drawn on top of
 exclusive full-screen.
