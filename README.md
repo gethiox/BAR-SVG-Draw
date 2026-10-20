@@ -4,6 +4,9 @@ Entirety of this project has been purely AI generated
 
 # BAR-Draw — draw SVG images on the map in Beyond All Reason
 
+Demo YouTube video: (click on image) 
+[![Demo YouTube link](./docs/yt-thumbnail.jpg)](https://www.youtube.com/watch?v=iWJsEALKxrY)
+
 A transparent, click-through overlay (Go + raylib) that turns any SVG into map
 drawings by emulating what a player does: hold the draw key (`` ` ``/`~`) and
 drag with the left mouse button.
